@@ -1,0 +1,20 @@
+/**
+ * =============================================================================
+ * GLOBAL.CSS - Tailwind CSS Entry Point
+ * =============================================================================
+ *
+ * This file is required for NativeWind (Tailwind CSS for React Native) to work.
+ *
+ * WHAT THESE DIRECTIVES DO:
+ * -------------------------
+ * @tailwind base      - Adds Tailwind's base/reset styles
+ * @tailwind components - Adds component classes (if any custom ones defined)
+ * @tailwind utilities  - Adds utility classes (bg-primary, text-white, etc.)
+ *
+ * YOU USUALLY DON'T NEED TO EDIT THIS FILE
+ * Colors and themes are defined in src/constants/colors.js
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
