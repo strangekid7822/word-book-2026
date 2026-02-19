@@ -1,21 +1,8 @@
 /**
- * =============================================================================
- * WELCOME SCREEN - The First Screen Users See
- * =============================================================================
+ * WELCOME SCREEN - Phone input landing page
  *
- * This is the app's landing page where users enter their phone number to start.
- *
- * FEATURES:
- * ---------
- * - App logo with glowing effect
- * - App title "单词王者"
- * - Phone number input field
- * - Animated send button (appears when user types)
- * - Phone validation (must be 11 digits)
- *
- * NAVIGATION:
- * -----------
- * After entering valid phone → navigates to Home screen
+ * Features: Logo with glow, phone input, animated send button
+ * Navigation: Valid phone → Home screen
  */
 
 import React, { useState, useRef } from "react";
@@ -31,176 +18,125 @@ import {
   StyleSheet,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-
-// Import colors from our theme (single source of truth)
+import Svg, { Defs, Filter, FeGaussianBlur, Circle as SvgCircle } from "react-native-svg";
 import { colors } from "../constants/theme";
 
-// =============================================================================
-// COMPONENT
-// =============================================================================
+const CANVAS_SIZE = 240; // 120px circle + 40px glow on each side + padding
+const CX = CANVAS_SIZE / 2;
+const RADIUS = 60;
 
 export default function WelcomeScreen({ navigation }: any) {
-  // ---------------------------------------------------------------------------
-  // STATE - Data that can change and triggers re-render
-  // ---------------------------------------------------------------------------
-  const [phone, setPhone] = useState(""); // User's phone number input
-  const [error, setError] = useState(""); // Error message (if validation fails)
-  const [isFocused, setIsFocused] = useState(false); // Is input field focused?
+  // State
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
-  // ---------------------------------------------------------------------------
-  // ANIMATION VALUES - For the animated send button
-  // ---------------------------------------------------------------------------
-  // These values control the button's scale (size) and opacity (visibility)
+  // Animation values for send button
   const buttonScale = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
-  // ---------------------------------------------------------------------------
-  // ANIMATION EFFECT - Show/hide button based on input
-  // ---------------------------------------------------------------------------
-  // When phone input changes, animate the button in or out
+  // Animate button in/out when phone input changes
   React.useEffect(() => {
-    if (phone.length > 0) {
-      // Phone has text → animate button IN (scale up, fade in)
-      Animated.parallel([
-        Animated.timing(buttonScale, {
-          toValue: 1, // Full size
-          duration: 300, // 300 milliseconds
-          useNativeDriver: true, // Better performance
-        }),
-        Animated.timing(buttonOpacity, {
-          toValue: 1, // Fully visible
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Phone is empty → animate button OUT (scale down, fade out)
-      Animated.parallel([
-        Animated.timing(buttonScale, {
-          toValue: 0, // Zero size
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(buttonOpacity, {
-          toValue: 0, // Invisible
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [phone]); // Run this effect whenever 'phone' changes
+    const toValue = phone.length > 0 ? 1 : 0;
+    Animated.parallel([
+      Animated.timing(buttonScale, {
+        toValue,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonOpacity, {
+        toValue,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [phone]);
 
-  // ---------------------------------------------------------------------------
-  // HANDLERS - Functions that respond to user actions
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Called when user taps the "发送" (Send) button
-   * Validates phone number and navigates to Home if valid
-   */
+  // Validate and navigate
   const handleSend = () => {
-    // Check if phone is exactly 11 digits (Chinese phone number format)
     if (phone.length !== 11) {
-      setError("请输入11位手机号码"); // "Please enter 11-digit phone number"
+      setError("请输入11位手机号码");
       return;
     }
-
-    // Phone is valid → clear error and navigate to Home screen
     setError("");
-    navigation.navigate("Home", { phone }); // Pass phone number to Home screen
+    navigation.navigate("Home", { phone });
   };
 
-  // ---------------------------------------------------------------------------
-  // RENDER - What the user sees
-  // ---------------------------------------------------------------------------
   return (
-    // KeyboardAvoidingView prevents keyboard from covering the input
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
       <View style={styles.container}>
-        {/* ================================================================= */}
-        {/* TOP GRADIENT - Creates the blue glow at top of screen */}
-        {/* ================================================================= */}
+        {/* Top gradient glow */}
         <LinearGradient
-          colors={[colors.shadow, "rgba(0, 170, 249, 0)"]} // Blue → transparent
+          colors={["rgba(0, 170, 249, 0.15)", "transparent"]}
           style={styles.topShadow}
-          pointerEvents="none" // Don't block touches
+          pointerEvents="none"
         />
 
-        {/* ================================================================= */}
-        {/* LOGO SECTION - Avatar with glowing effect */}
-        {/* ================================================================= */}
-        {/* Outer glow layer */}
-        <View style={styles.logoGlowOuter}>
-          {/* Inner glow layer */}
-          <View style={styles.logoGlowInner}>
-            {/* Actual logo container */}
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("../../assets/wolfe_avatar.png")}
-                style={styles.logoImage}
-                resizeMode="cover"
-              />
-            </View>
+        {/* Logo with real Gaussian blur glow via SVG filters */}
+        <View style={styles.logoWrapper}>
+          <Svg style={styles.glowCanvas} width={CANVAS_SIZE} height={CANVAS_SIZE}>
+            <Defs>
+              <Filter id="glow1" x="-100%" y="-100%" width="300%" height="300%">
+                <FeGaussianBlur stdDeviation="20" />
+              </Filter>
+              <Filter id="glow2" x="-100%" y="-100%" width="300%" height="300%">
+                <FeGaussianBlur stdDeviation="40" />
+              </Filter>
+            </Defs>
+            <SvgCircle cx={CX} cy={CX} r={RADIUS} fill="rgba(0,170,249,0.2)" filter="url(#glow2)" />
+            <SvgCircle cx={CX} cy={CX} r={RADIUS} fill="rgba(0,170,249,0.3)" filter="url(#glow1)" />
+          </Svg>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../../assets/wolfe_avatar.png")}
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
           </View>
         </View>
 
-        {/* ================================================================= */}
-        {/* TITLE - App name */}
-        {/* ================================================================= */}
+        {/* Title */}
         <Text style={styles.title}>单词王者</Text>
 
-        {/* ================================================================= */}
-        {/* ERROR MESSAGE - Shows when phone validation fails */}
-        {/* ================================================================= */}
+        {/* Error message */}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        {/* ================================================================= */}
-        {/* PHONE INPUT SECTION - Input field with send button inside */}
-        {/* ================================================================= */}
+        {/* Phone input with embedded send button */}
         <View
           style={[
             styles.inputContainer,
-            // Change border color when focused
-            { borderColor: isFocused ? colors.primary : "#E8F4FD" },
+            // Border invisible on white bg; subtle highlight on focus
+            { borderColor: isFocused ? colors.secondary : colors.white },
           ]}
         >
-          {/* Phone number input field */}
           <TextInput
-            placeholder="输入电话开始学习" // "Enter phone to start learning"
-            placeholderTextColor="#A0AEC0"
-            keyboardType="phone-pad" // Show number keyboard
+            placeholder="输入电话开始学习"
+            placeholderTextColor={colors.greyDarker}
+            keyboardType="phone-pad"
             value={phone}
             onChangeText={(text) => {
-              // Only allow numbers (remove any non-digit characters)
               setPhone(text.replace(/[^0-9]/g, ""));
-              setError(""); // Clear error when user types
+              setError("");
             }}
-            onFocus={() => setIsFocused(true)} // Track focus state
+            onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            style={[
-              styles.input,
-              // Add padding when button is hidden to center text
-              { paddingRight: phone.length > 0 ? 0 : 20 },
-            ]}
-            maxLength={11} // Max 11 digits
+            style={[styles.input, { paddingRight: phone.length > 0 ? 0 : 20 }]}
+            maxLength={11}
           />
 
-          {/* ============================================================= */}
-          {/* SEND BUTTON - Animated, appears when user types */}
-          {/* ============================================================= */}
+          {/* Animated send button */}
           <Animated.View
             style={{
-              transform: [{ scale: buttonScale }], // Scale animation
-              opacity: buttonOpacity, // Fade animation
+              transform: [{ scale: buttonScale }],
+              opacity: buttonOpacity,
             }}
           >
             <TouchableOpacity onPress={handleSend} activeOpacity={0.85}>
-              {/* Gradient background for the button */}
               <LinearGradient
-                colors={["#5AC8FA", colors.primary]} // Light blue → primary blue
+                colors={[colors.secondary, colors.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.sendButton}
@@ -216,80 +152,55 @@ export default function WelcomeScreen({ navigation }: any) {
 }
 
 // =============================================================================
-// STYLES - All the visual styling for this screen
+// STYLES
 // =============================================================================
 
 const styles = StyleSheet.create({
-  // ---------------------------------------------------------------------------
-  // Main container - full screen with centered content
-  // ---------------------------------------------------------------------------
+  // Full screen container
   container: {
-    flex: 1, // Take up all available space
-    alignItems: "center", // Center children horizontally
-    justifyContent: "center", // Center children vertically
-    backgroundColor: colors.tertiary, // Light blue background
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.tertiary,
   },
 
-  // ---------------------------------------------------------------------------
-  // Top shadow gradient - creates the blue glow at top
-  // ---------------------------------------------------------------------------
+  // Top blue glow - subtle, barely noticeable
   topShadow: {
-    position: "absolute", // Position independently
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: 120, // How far the glow extends
+    height: 150, // Taller = more gradual fade
   },
 
-  // ---------------------------------------------------------------------------
-  // Logo glow layers - creates the glowing effect around the avatar
-  // ---------------------------------------------------------------------------
-  logoGlowOuter: {
-    width: 160,
-    height: 160,
-    borderRadius: 80, // Circle
-    backgroundColor: "rgba(0, 170, 249, 0.08)", // Very subtle blue
+  // Logo wrapper — contains Skia canvas + avatar image
+  logoWrapper: {
+    width: CANVAS_SIZE,
+    height: CANVAS_SIZE,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
   },
-
-  logoGlowInner: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(0, 170, 249, 0.12)", // Slightly more visible blue
-    alignItems: "center",
-    justifyContent: "center",
+  glowCanvas: {
+    position: "absolute",
+    width: CANVAS_SIZE,
+    height: CANVAS_SIZE,
   },
-
-  // ---------------------------------------------------------------------------
-  // Logo container - holds the actual avatar image
-  // ---------------------------------------------------------------------------
   logoContainer: {
     width: 120,
     height: 120,
-    borderRadius: 60, // Circle
+    borderRadius: 60,
     borderWidth: 3,
-    borderColor: colors.white, // White border
-    overflow: "hidden", // Clip image to circle
-    backgroundColor: "#E5E7EB", // Fallback color
-    // Shadow/glow effect
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10, // Android shadow
+    borderColor: colors.white,
+    overflow: "hidden",
+    backgroundColor: colors.grey,
   },
-
   logoImage: {
     width: "100%",
     height: "100%",
   },
 
-  // ---------------------------------------------------------------------------
-  // Title text
-  // ---------------------------------------------------------------------------
+  // Title
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -297,62 +208,52 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  // ---------------------------------------------------------------------------
-  // Error message text
-  // ---------------------------------------------------------------------------
+  // Error text
   errorText: {
-    color: colors.pink, // Pink/red for errors
+    color: colors.pink,
     fontSize: 14,
     marginBottom: 8,
   },
 
-  // ---------------------------------------------------------------------------
-  // Input container - the pill-shaped input field
-  // ---------------------------------------------------------------------------
+  // Phone input container (pill shape, subtle inner depth)
   inputContainer: {
     width: "85%",
     maxWidth: 360,
     height: 52,
-    borderRadius: 9999, // Very large = pill shape
+    borderRadius: 9999,
     backgroundColor: colors.white,
-    borderWidth: 2,
-    flexDirection: "row", // Layout children in a row
+    borderWidth: 1, // Thin border, invisible when white
+    flexDirection: "row",
     alignItems: "center",
     paddingLeft: 20,
     paddingRight: 6,
-    // Subtle shadow
+    // Simulated inset shadow for depth
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 2,
   },
 
-  // ---------------------------------------------------------------------------
   // Text input
-  // ---------------------------------------------------------------------------
   input: {
-    flex: 1, // Take remaining space
+    flex: 1,
     fontSize: 16,
     textAlign: "center",
-    color: "#333",
+    color: colors.black,
   },
 
-  // ---------------------------------------------------------------------------
-  // Send button
-  // ---------------------------------------------------------------------------
+  // Send button (pill shape with gradient)
   sendButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 9999, // Pill shape
-    // Button glow
+    borderRadius: 9999,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
-
   sendButtonText: {
     color: colors.white,
     fontSize: 15,

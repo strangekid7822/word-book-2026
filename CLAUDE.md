@@ -12,6 +12,7 @@ Built with Expo, TypeScript, React Navigation, and NativeWind (Tailwind CSS).
 - **Navigation:** React Navigation (Native Stack)
 - **Styling:** NativeWind v4 (Tailwind CSS for React Native)
 - **Animations:** React Native Animated API
+- **SVG / Blur effects:** react-native-svg (bundled in Expo Go)
 
 ---
 
